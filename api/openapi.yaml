@@ -1,0 +1,560 @@
+openapi: 3.0.0
+info:
+  title: Server Management
+  version: 1.0.0
+servers:
+- url: https://virtserver.swaggerhub.com/BlueCyber/Server/1.0.0
+  description: SwaggerHub API Auto Mocking
+- url: https://localhost:3000
+tags:
+- name: user
+- name: server
+- name: others
+paths:
+  /user/login:
+    post:
+      tags:
+      - user
+      summary: Used to log in a user
+      description: Used to log in a user
+      operationId: userLoginPOST
+      parameters:
+      - name: email
+        in: query
+        description: email
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: password
+        in: query
+        description: password for login
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: password
+      responses:
+        "200":
+          description: login successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200'
+        "404":
+          description: Failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-swagger-router-controller: User
+  /user/register:
+    post:
+      tags:
+      - user
+      summary: register users
+      operationId: userRegisterPOST
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/user_register_body'
+        required: true
+      responses:
+        "200":
+          description: Create successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200'
+        "404":
+          description: Failed
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-swagger-router-controller: User
+  /server:
+    get:
+      tags:
+      - server
+      summary: get all servers
+      operationId: serverGET
+      parameters:
+      - name: p
+        in: query
+        description: Numeric ID of page
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: Server Information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_1'
+        "404":
+          description: Failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - bearerAuth: []
+      x-swagger-router-controller: Server
+    post:
+      tags:
+      - server
+      summary: create server
+      operationId: serverPOST
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServerInfor'
+        required: true
+      responses:
+        "200":
+          description: server information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        "404":
+          description: Failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - bearerAuth: []
+      x-swagger-router-controller: Server
+    delete:
+      tags:
+      - server
+      summary: delete one or many servers
+      operationId: serverDELETE
+      parameters:
+      - name: array_id
+        in: query
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        "200":
+          description: server information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        "401":
+          description: Unauthorized
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Not found
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - bearerAuth: []
+      x-swagger-router-controller: Server
+  /server/{id}:
+    put:
+      tags:
+      - server
+      summary: update server
+      operationId: serverIdPUT
+      parameters:
+      - name: id
+        in: path
+        description: ID of the server to update
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServerUpdate'
+        required: true
+      responses:
+        "200":
+          description: server information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        "401":
+          description: Unauthorized
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Not found
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - bearerAuth: []
+      x-swagger-router-controller: Server
+  /server/history/{id}:
+    get:
+      tags:
+      - server
+      summary: get history
+      operationId: serverHistoryIdGET
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Server History
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_2'
+        "404":
+          description: Failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - bearerAuth: []
+      x-swagger-router-controller: Server
+  /server/status/{id}:
+    get:
+      tags:
+      - server
+      summary: Check servers status
+      operationId: serverStatusIdGET
+      parameters:
+      - name: id
+        in: path
+        description: ID of the server to get status
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: server information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_3'
+        "404":
+          description: Not found server
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - bearerAuth: []
+      x-swagger-router-controller: Server
+  /search:
+    get:
+      tags:
+      - others
+      summary: search servers
+      operationId: searchGET
+      parameters:
+      - name: q
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: status
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      - name: start
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date-time
+      - name: end
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date-time
+      responses:
+        "200":
+          description: server information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_1'
+        "404":
+          description: Failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - bearerAuth: []
+      x-swagger-router-controller: Others
+  /exportCSV:
+    get:
+      tags:
+      - others
+      summary: exportCSV
+      operationId: exportCSVGET
+      responses:
+        "200":
+          description: Server Information
+          content:
+            application/csv:
+              schema:
+                type: string
+                format: binary
+                x-content-type: application/csv
+        "404":
+          description: Failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - bearerAuth: []
+      x-swagger-router-controller: Others
+components:
+  schemas:
+    Error:
+      required:
+      - code
+      - message
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+    Success:
+      required:
+      - code
+      - message
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+      example:
+        code: 0
+        message: message
+    ServerInfor:
+      required:
+      - description
+      - ip
+      - password
+      - port
+      - username
+      type: object
+      properties:
+        password:
+          type: string
+        username:
+          type: string
+        description:
+          type: string
+        port:
+          type: string
+        ip:
+          type: string
+    ServerUpdate:
+      type: object
+      properties:
+        password:
+          type: string
+        username:
+          type: string
+        description:
+          type: string
+        port:
+          type: string
+    Response:
+      type: array
+      items:
+        $ref: '#/components/schemas/Response_inner'
+    History:
+      type: array
+      items:
+        $ref: '#/components/schemas/History_inner'
+    inline_response_200:
+      type: object
+      properties:
+        email:
+          type: string
+        username:
+          type: string
+        token:
+          type: string
+      example:
+        email: email
+        username: username
+        token: token
+    user_register_body:
+      required:
+      - email
+      - password
+      - username
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+    inline_response_200_1:
+      required:
+      - page
+      - servers
+      - totalPage
+      type: object
+      properties:
+        page:
+          type: integer
+          format: int32
+        totalPage:
+          type: integer
+          format: int32
+        servers:
+          $ref: '#/components/schemas/Response'
+      example:
+        servers:
+        - createdAt: 2000-01-23T04:56:07.000+00:00
+          password: password
+          port: port
+          IP: IP
+          description: description
+          username: username
+          status: true
+        - createdAt: 2000-01-23T04:56:07.000+00:00
+          password: password
+          port: port
+          IP: IP
+          description: description
+          username: username
+          status: true
+        totalPage: 6
+        page: 0
+    inline_response_200_2:
+      required:
+      - data
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/History'
+      example:
+        data:
+        - password_old: password_old
+          username_old: username_old
+          port_old: 0
+          status_old: true
+          change_time: 2000-01-23T04:56:07.000+00:00
+        - password_old: password_old
+          username_old: username_old
+          port_old: 0
+          status_old: true
+          change_time: 2000-01-23T04:56:07.000+00:00
+    inline_response_200_3:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        status:
+          type: string
+      example:
+        code: 0
+        status: status
+    Response_inner:
+      type: object
+      properties:
+        password:
+          type: string
+        username:
+          type: string
+        description:
+          type: string
+        port:
+          type: string
+        status:
+          type: boolean
+        IP:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      example:
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        password: password
+        port: port
+        IP: IP
+        description: description
+        username: username
+        status: true
+    History_inner:
+      type: object
+      properties:
+        password_old:
+          type: string
+        username_old:
+          type: string
+        port_old:
+          type: integer
+          format: int32
+        change_time:
+          type: string
+          format: date-time
+        status_old:
+          type: boolean
+      example:
+        password_old: password_old
+        username_old: username_old
+        port_old: 0
+        status_old: true
+        change_time: 2000-01-23T04:56:07.000+00:00
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
