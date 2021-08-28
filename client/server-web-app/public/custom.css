@@ -1,0 +1,10 @@
+
+
+button {
+    text-decoration: capitalize!important;
+    font-weight: 400!important;
+}
+
+.small {
+    font-size: 13px;
+}

@@ -9,7 +9,7 @@ module.exports.serverDELETE = function serverDELETE(req, res, next, array_id) {
       utils.writeJson(res, response);
     })
     .catch(function (response) {
-      utils.writeJson(res, response);
+      utils.writeJson(res, response)
     });
 };
 
