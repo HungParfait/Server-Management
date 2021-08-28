@@ -9,9 +9,9 @@ const Server = require('../models/db/Servers');
  *
  * returns byte[]
  **/
-exports.exportCSVGET = async function (req, res) {
+exports.exportCSVGET = async function (res) {
     createXLSXfile()
-    res.download('./server.xlsx','server.xlsx')
+    res.download('./server.xlsx', 'server.xlsx')
 }
 
 /**
@@ -23,19 +23,29 @@ exports.exportCSVGET = async function (req, res) {
  * end Date  (optional)
  * returns inline_response_200
  **/
-exports.searchGET = async function (req, q, status, start, end) {
-    Server.find({
-        'createdAt': {
-            "$gte": start,
-            "$lt": end
-        },
-        'IP': q,
-        'status': status
-    }, (err, server) => {
-        if (err) return utils.respondWithCode(500, {
-            message: 'Something went wrong.',
-            code: 500
-        });
+exports.searchGET = async function (q, status, start, end) {
+    try {
+        let objSearch = {}
+
+        if(start || end ) {
+            objSearch.createdAt = {}
+            if (start) {
+                start = new Date(start).toISOString()
+                objSearch.createdAt['$gte'] = start 
+            }
+    
+            if(end) {
+                end = new Date(end).toISOString()
+                objSearch.createdAt['$lt'] = end 
+            }
+        }
+
+        if(q) objSearch.IP = q
+
+        if(status) objSearch.status = status
+
+        const server = await Server.find(objSearch)
+
         if (!server) {
             return utils.respondWithCode(404, {
                 message: 'Server is not exist',
@@ -46,10 +56,15 @@ exports.searchGET = async function (req, q, status, start, end) {
                 server
             })
         }
-    })
+    } catch (err) {
+        return utils.respondWithCode(500, {
+            message: 'Something went wrong.',
+            code: 500
+        });
+    }
 }
 
-var createXLSXfile = exports.createXLSXfile =  async function() {
+var createXLSXfile = exports.createXLSXfile = async function () {
     try {
         var fs = require('fs')
 
@@ -92,5 +107,3 @@ var createXLSXfile = exports.createXLSXfile =  async function() {
         console.log(err)
     }
 }
-
-createXLSXfile()

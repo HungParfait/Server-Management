@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 var jwt = require("jsonwebtoken");
 
 const utils = require('../../utils/writer')
@@ -9,7 +11,7 @@ module.exports.auth = async function (req,res,next) {
 
     if (token) {
       try {
-        decodedData = jwt.verify(token, 'duchung-email');
+        decodedData = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
         if (decodedData) {
           next()
         }
