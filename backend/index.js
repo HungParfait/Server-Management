@@ -1,5 +1,5 @@
 'use strict';
-
+require('dotenv').config()
 var path = require('path');
 
 var cors = require('cors')
@@ -18,7 +18,7 @@ const {
 } = require('./service/mailSender')
 var oas3Tools = require('oas3-tools');
 
-var serverPort = 3000;
+var serverPort = process.env.PORT || 3000;
 
 // swaggerRouter configuration
 var options = {

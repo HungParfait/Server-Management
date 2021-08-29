@@ -1,0 +1,25 @@
+version: "3.9"  # optional since v1.27.0
+services:
+  server:
+    container_name: server
+    image: server-management-project
+    restart: always
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - 3000:3000
+    links:
+      - mongo
+    depends_on:
+      - mongo 
+    environment: 
+      PORT: 3000
+      DB_CONNECTION_STRING: mongodb://mongo/ServerManagement
+      NODE_ENV: development
+  mongo:
+    container_name: mongo
+    image: mongo
+    ports:
+      - "27017:27017"
+    restart: always

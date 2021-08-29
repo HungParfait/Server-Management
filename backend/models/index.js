@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 
 async function connect() {
     try {
-        await mongoose.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@clusterstack.cyazk.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`, {
+        await mongoose.connect(process.env.DB_CONNECTION_STRING || 'mongodb://localhost:27017/ServerManagement', {
             useNewUrlParser: true,
             useUnifiedTopology: true,
             useFindAndModify: false,
@@ -15,4 +15,4 @@ async function connect() {
     }
 }
 
-module.exports = { connect };
+module.exports = { connect }
