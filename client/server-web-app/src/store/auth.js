@@ -36,16 +36,17 @@ export const auth = {
         }
     },
     actions: {
-        login({ commit }, user) {
+        login({
+            commit
+        }, user) {
             return allUserServices.login(user).then(
-                    async ( { data } ) => {
+                    async ({ data }) => {
                         commit('loginSuccess', data);
                         return data
                     })
-                .catch(
-                    async (error) => {
+                .catch( (error) => {
                         commit('loginFailure');
-                        return error;
+                        return Promise.reject(error)
                     }
                 );
         },
@@ -58,16 +59,15 @@ export const auth = {
         register({
             commit
         }, user) {
-            return allUserServices.register(user).then(
-                response => {
+            return allUserServices.register(user)
+                .then( async response => {
                     commit('registerSuccess');
-                    return Promise.resolve(response.data);
-                },
-                error => {
+                    return response.data;
+                })
+                .catch(error => {
                     commit('registerFailure');
-                    return Promise.reject(error);
-                }
-            );
-        }
+                    return Promise.reject(error)
+                });
     }
+}
 }

@@ -41,7 +41,7 @@
           </p>
         </v-container>
       </v-form>
-      <p>{{ message }}</p>
+      <p class="font-weight-medium text--red">{{ message }}</p>
       <p class="text-center text-sm-body-2 font-italic">Or</p>
       <p class="text-center mt-3">
         <router-link to="/register" class="router-link">Sign Up</router-link>
@@ -96,7 +96,7 @@ export default {
             localStorage.setItem('user',user)
             this.$router.push("/server");
           })
-          .catch((error) => {
+          .catch(error => {
             this.loading = false;
             this.message =
               (error.response && error.response.data.message) || error.message;

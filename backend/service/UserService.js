@@ -24,6 +24,7 @@ exports.userLoginPOST = async function (email, password) {
     const user = await User.findOne({
       email: email
     })
+    
     if (!user) {
       return utils.respondWithCode(404, {
         code: 404,
@@ -73,10 +74,9 @@ exports.userRegisterPOST = async function (body) {
   } = body
 
   try {
-    const user = User.findOne({
+    const user = await User.findOne({
       email: email
     })
-
     if (user) {
       return utils.respondWithCode(403, {
         code: 403,
@@ -100,8 +100,8 @@ exports.userRegisterPOST = async function (body) {
     });
 
     const obj = {
-      username: user.user_name,
-      email: user.email,
+      username: newUser.user_name,
+      email: newUser.email,
       token
     }
     return utils.respondWithCode(200, obj)

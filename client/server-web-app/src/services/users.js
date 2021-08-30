@@ -3,7 +3,10 @@ import SwaggerClient from 'swagger-client'
 import spec from '../../spec.json'
 
 class allUserServices {
-    login( { email, password } ) {
+    login({
+        email,
+        password
+    }) {
         return SwaggerClient.execute({
             spec: spec,
             operationId: 'userLoginPOST',
@@ -12,18 +15,22 @@ class allUserServices {
                 password: password,
             },
         })
-        }
+    }
 
     logout() {
         localStorage.removeItem('user');
     }
 
-    register (user) {
-        
-    }
-
-    handleHeader() {
-        
+    register(user) {
+        return SwaggerClient.execute({
+            spec: spec,
+            operationId: 'userRegisterPOST',
+            requestContentType: 'application/json',
+            requestInterceptor(req) {
+                req.body = JSON.stringify(user);
+                return req
+            }
+        })
     }
 }
 

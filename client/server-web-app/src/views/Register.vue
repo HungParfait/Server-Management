@@ -85,7 +85,7 @@ export default {
     message: "",
     loading: false,
     repeatPassword: "",
-    user: new User("", ""),
+    user: new User("", "",""),
     passwordRules: [(v) => !!v || "required"],
     emailRules: [
       (v) => !!v || "E-mail is required",
