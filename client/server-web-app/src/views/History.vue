@@ -87,9 +87,9 @@ export default {
   },
 
   created: function () {
-    console;
     this.getHistoryData(this.$route.params.serverId);
   },
+  
   methods: {
     logOut: function () {
       this.$store.dispatch("logout");

@@ -19,22 +19,22 @@ const routes = [
     component: Register
   },
   {
-    path: '/server',
+    path: '/view-server',
     name: 'Server',
     component: Server
   },
   {
-    path: '/history/:serverId',
+    path: '/view-history/:serverId',
     name: 'History',
     component: History
   },
   {
     path: '/',
-    redirect: '/server'
+    redirect: '/view-server'
   },
   {
     path: '*',
-    redirect: '/server'
+    redirect: '/view-server'
   },
 ]
 

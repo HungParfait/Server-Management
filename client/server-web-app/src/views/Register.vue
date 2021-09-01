@@ -117,6 +117,12 @@ export default {
     },
   },
 
+  created: function() {
+      if (this.$store.state.auth.status.loggedIn) {
+        this.$router.push("/view-server");
+      }
+  },
+
   methods: {
     registerFunc: function () {
       if (this.user.username && this.user.password && this.user.email) {
@@ -124,16 +130,15 @@ export default {
 
         this.$store.dispatch("register", this.user).then(
           () => {
-            this.$router.push("/server");
-          },
-          (error) => {
+            this.$router.push("/view-server");
+          })
+          .catch(error => {
             this.loading = false;
             this.message =
               (error.response && error.response.data) ||
               error.message ||
               error.toString();
-          }
-        );
+          });
       }
     },
   },

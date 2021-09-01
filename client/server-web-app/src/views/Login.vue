@@ -79,13 +79,11 @@ export default {
     ],
   }),
 
-  computed: {
-    created() {
-      if (this.loggedIn) {
-        this.$router.push("/server");
+  created: function() {
+      if (this.$store.state.auth.status.loggedIn) {
+        this.$router.push("/view-server");
       }
     },
-  },
 
   methods: {
     loginFunc: function () {
@@ -94,7 +92,7 @@ export default {
         this.$store.dispatch("login", this.user)
           .then((user) => {
             localStorage.setItem('user',user)
-            this.$router.push("/server");
+            this.$router.push("/view-server");
           })
           .catch(error => {
             this.loading = false;

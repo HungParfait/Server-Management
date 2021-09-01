@@ -536,7 +536,7 @@
                 "schema": {
                   "type": "string",
                   "format": "binary",
-                  "x-content-type": "application/csv"
+                  "x-content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 }
               }
             }

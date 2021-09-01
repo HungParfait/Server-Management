@@ -233,9 +233,8 @@ exports.serverStatusIdGET = async function (id) {
           })
           await server.save()
         }
-        error.code = 400
         error.status = 'Off'
-        return utils.respondWithCode(400, error)
+        return utils.respondWithCode(200, error)
       }
 
     }
@@ -244,7 +243,7 @@ exports.serverStatusIdGET = async function (id) {
   }
 }
 
-async function runContinuous() {
+exports.checkStatusContinuous = async function () {
   const server = await Server.find({})
   if (server) {
     server.forEach( async (item) => {
@@ -291,5 +290,3 @@ async function runContinuous() {
     })
   }
 }
-
-var time = setInterval(runContinuous, 60 * 60 * 1000);

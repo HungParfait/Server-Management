@@ -41,7 +41,6 @@ class allServerServices {
     async delete({
         token
     }, array) {
-        console.log(token)
         return SwaggerClient.execute({
             spec: spec,
             operationId: "serverDELETE",

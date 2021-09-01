@@ -37,11 +37,14 @@
             v-model="searchcontent"
             class="input"
           />
-          <i class="fas fa-search ms-n6 effect-1" @click="navigationFunction()"></i>
+          <i
+            class="fas fa-search ms-n6 effect-1"
+            @click="navigationFunction()"
+          ></i>
         </div>
         <div>
           <p @click="homeFunction()">
-              <i class="fas fa-home fa-2x"></i>
+            <i class="fas fa-home fa-2x"></i>
           </p>
         </div>
       </div>
@@ -161,12 +164,18 @@
 
               <div class="mx-3 text-subtitle-2 chip" v-if="displayFrom">
                 <span>From: {{ start_date }}</span>
-                <i class="fas fa-times ms-2" @click="deleteFilter('displayFrom')"></i>
+                <i
+                  class="fas fa-times ms-2"
+                  @click="deleteFilter('displayFrom')"
+                ></i>
               </div>
 
               <div class="mx-3 text-subtitle-2 chip" v-if="displayTo">
                 <span>To: {{ end_date }}</span>
-                <i class="fas fa-times ms-2" @click="deleteFilter('displayTo')"></i>
+                <i
+                  class="fas fa-times ms-2"
+                  @click="deleteFilter('displayTo')"
+                ></i>
               </div>
             </div>
           </template>
@@ -281,12 +290,17 @@
         item-key="_id"
         show-select
         class="elevation-1 mt-4"
-        checkbox-color="#378af4"
       >
         <template v-slot:[`item.actions`]="{ item }">
           <v-tooltip bottom>
             <template v-slot:activator="{ on, attrs }">
-              <v-icon small v-bind="attrs" v-on="on" @click="addIdFunc(item)">
+              <v-icon
+                small
+                v-bind="attrs"
+                v-on="on"
+                @click="addIdFunc(item)"
+                class="mx-1"
+              >
                 mdi-pencil
               </v-icon>
             </template>
@@ -300,6 +314,7 @@
                 v-bind="attrs"
                 v-on="on"
                 @click="statusFunction(item)"
+                class="mx-1"
               >
                 mdi-access-point
               </v-icon>
@@ -313,7 +328,7 @@
                 small
                 v-bind="attrs"
                 v-on="on"
-                class="fas fa-history text--black"
+                class="fas fa-history text--black mx-1"
                 @click="
                   $router.push({
                     name: 'History',
@@ -324,8 +339,22 @@
             </template>
             <span>History</span>
           </v-tooltip>
+
         </template>
       </v-data-table>
+
+      <v-dialog v-model="progress" hide-overlay persistent width="300">
+        <v-card color="primary" dark>
+          <v-card-text>
+            Check server status
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
     </div>
 
     <v-overlay :z-index="10" :value="updateInforBox">
@@ -425,6 +454,7 @@ import allServerServices from "../services/servers";
 export default {
   data() {
     return {
+      progress: false,
       searchcontent: "",
       snackbar: false,
       dialog: false,
@@ -471,17 +501,19 @@ export default {
       servers: [],
       text: "",
       timeout: 2000,
-      image: "s",
       updateId: "",
     };
   },
 
   computed: {
     username: function () {
-      return this.$store.state.auth.user.username;
+      return JSON.parse(localStorage.getItem("user")).username;
     },
     email: function () {
-      return this.$store.state.auth.user.email;
+      return JSON.parse(localStorage.getItem("user")).email;
+    },
+    image: function () {
+      return JSON.parse(localStorage.getItem("user")).username[0];
     },
   },
 
@@ -525,19 +557,21 @@ export default {
     deleteFunction(array) {
       const user = JSON.parse(localStorage.getItem("user"));
       if (array.length > 0) {
-        array = array.map((item) => item._id);
+        array = array.map(item => item._id);
         allServerServices
           .delete(user, array)
-          .then(() => {
+          .then( () => {
             this.snackbarInform("Server Deleted Successfully");
-            this.getData();
+            this.servers = this.servers.filter( item => {
+              return !array.includes(item._id);
+            });
           })
           .catch((error) => {
             this.snackbarInform(
               (error.response && error.response.data.message) || error.message
             );
           });
-        this.selected = [];
+          this.selected = []
       } else {
         this.snackbarInform("No selection");
       }
@@ -545,10 +579,21 @@ export default {
 
     statusFunction(item) {
       const user = JSON.parse(localStorage.getItem("user"));
-      allServerServices.getStatus(user, item._id).then((response) => {
-        console.log(response);
-        item.status = response.obj.status;
-      });
+      this.progress = true;
+      this.snackbarInform("Please wait");
+      allServerServices
+        .getStatus(user, item._id)
+        .then((response) => {
+          this.progress = false;
+          item.status = response.obj.status;
+          this.snackbarInform(
+            `Status: ${response.obj.status} - ${response.obj.level || ""}`
+          );
+        })
+        .catch((err) => {
+          this.progress = false;
+          this.snackbarInform(err);
+        });
     },
 
     searchFunction() {
@@ -557,7 +602,6 @@ export default {
       allServerServices
         .search(user, obj)
         .then((response) => {
-          console.log(response)
           this.servers = response.obj.server.map((item) => {
             if (item.status === true) item.status = "On";
             else item.status = "Off";
@@ -578,7 +622,6 @@ export default {
       allServerServices
         .exportCSV(user)
         .then((response) => {
-          console.log(response);
           var hiddenElement = document.createElement("a");
           const url = window.URL.createObjectURL(response.data);
           hiddenElement.href = url;
@@ -597,12 +640,10 @@ export default {
       const user = JSON.parse(localStorage.getItem("user"));
       allServerServices
         .update(user, data, id)
-        .then((response) => {
-          console.log(response);
+        .then(() => {
           this.getData();
         })
         .catch((error) => {
-          console.log(error);
           this.snackbarInform(
             (error.response && error.response.data.message) || error.message
           );
@@ -638,14 +679,14 @@ export default {
     },
 
     navigationFunction() {
-      this.dialog = false
+      this.dialog = false;
       this.$router.push({
         path: "/server",
         query: {
           q: this.searchcontent,
           start: this.displayFrom,
           end: this.displayTo,
-          status: this.statusFilter
+          status: this.statusFilter,
         },
       });
     },
@@ -653,17 +694,17 @@ export default {
     homeFunction() {
       this.$router.push({
         path: "/server",
-      })
-      this.displayFrom = null
-      this.displayTo = null
-      this.statusFilter = null
-      this.searchcontent = null
+      });
+      this.displayFrom = null;
+      this.displayTo = null;
+      this.statusFilter = null;
+      this.searchcontent = null;
     },
 
     deleteFilter(filter) {
-      this[filter] = null
-      this.navigationFunction()
-    }
+      this[filter] = null;
+      this.navigationFunction();
+    },
   },
 };
 </script>

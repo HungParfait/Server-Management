@@ -4,6 +4,8 @@ const utils = require('../utils/writer');
 
 const Server = require('../models/db/Servers');
 
+var path = require('path');
+
 /**
  * exportCSV
  *
@@ -11,7 +13,7 @@ const Server = require('../models/db/Servers');
  **/
 exports.exportCSVGET = async function (res) {
     createXLSXfile()
-    res.download('./server.xlsx', 'server.xlsx')
+    res.download(path.join(__dirname, '../public/server.xlsx'), 'server.xlsx')
 }
 
 /**
@@ -100,7 +102,7 @@ var createXLSXfile = exports.createXLSXfile = async function () {
             data: dataExcel
         }]);
 
-        fs.writeFile('./server.xlsx', buffer, function (err) {
+        fs.writeFile(path.join(__dirname, '../public/server.xlsx'), buffer, function (err) {
             if (err) throw err;
         })
 

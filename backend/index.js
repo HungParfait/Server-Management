@@ -13,9 +13,13 @@ const cron = require('node-cron')
 const {
     auth
 } = require('./service/middlewares/index')
+
 const {
     mailSender
 } = require('./service/mailSender')
+
+const { checkStatusContinuous } = require('./service/ServerService')
+
 var oas3Tools = require('oas3-tools');
 
 var serverPort = process.env.PORT || 3000;
@@ -33,15 +37,18 @@ var openApiApp = expressAppConfig.getApp();
 
 const app = express();
 
-
-
 app.use(cors());
 
 app.use(express.urlencoded({
     extended: false
 }))
 
-// parse application/json
+app.use(express.static(path.join(__dirname, '/public/dist')))
+
+app.get('/view-server' || '/login' || '/view-history' || '/register', (req, res) => {
+    res.sendFile(path.join(__dirname, '/public/dist/index.html'))
+})
+
 app.use(express.json())
 
 app.use('/server', auth)
@@ -49,8 +56,6 @@ app.use('/server', auth)
 app.use('/check', auth)
 
 app.use('/exportCSV', auth)
-
-app.use(express.static(__dirname + '\\public'))
 
 for (let i = 2; i < openApiApp._router.stack.length; i++) {
     app._router.stack.push(openApiApp._router.stack[i]);
@@ -63,6 +68,10 @@ cron.schedule('0 0 10 * * *', () => {
 }, {
     scheduled: true,
     timezone: "Asia/Bangkok"
+})
+
+cron.schedule('0 0 * * * *', () => {
+    checkStatusContinuous()
 })
 
 // Initialize the Swagger middleware
