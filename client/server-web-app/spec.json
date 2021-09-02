@@ -521,18 +521,18 @@
         "x-swagger-router-controller": "Others"
       }
     },
-    "/exportCSV": {
+    "/exportXLSX": {
       "get": {
         "tags": [
           "others"
         ],
-        "summary": "exportCSV",
-        "operationId": "exportCSVGET",
+        "summary": "exportXLSX",
+        "operationId": "exportXLSXGET",
         "responses": {
           "200": {
             "description": "Server Information",
             "content": {
-              "application/csv": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
                 "schema": {
                   "type": "string",
                   "format": "binary",

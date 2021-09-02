@@ -144,17 +144,18 @@ class allServerServices {
         })
     }
 
-    async exportCSV({
+    async exportXLSX({
         token
     }) {
         return SwaggerClient.execute({
             spec: spec,
-            operationId: "exportCSVGET",
+            operationId: "exportXLSXGET",
             securities: {
                 authorized: {
                     bearerAuth: token
                 }
-            }
+            },
+            requestContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         })
     }
 }

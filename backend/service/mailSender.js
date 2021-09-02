@@ -1,4 +1,6 @@
 const nodemailer = require('nodemailer')
+
+const path = require('path')
 const {
   createXLSXfile
 } = require('./OthersService')
@@ -23,7 +25,7 @@ exports.mailSender = async function () {
     html: '<p>Server Management</p>',
     attachments: [{ 
       filename: 'server.xlsx',
-      path: './server.xlsx'
+      path: path.join(__dirname, '../public/server.xlsx')
     }, ]
   };
 

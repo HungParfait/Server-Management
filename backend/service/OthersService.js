@@ -7,13 +7,13 @@ const Server = require('../models/db/Servers');
 var path = require('path');
 
 /**
- * exportCSV
+ * exportXLSX
  *
  * returns byte[]
  **/
-exports.exportCSVGET = async function (res) {
-    createXLSXfile()
-    res.download(path.join(__dirname, '../public/server.xlsx'), 'server.xlsx')
+exports.exportXLSXGET = async function (res) {
+    await createXLSXfile()
+    res.download(path.join(__dirname, '../public/server.xlsx'))
 }
 
 /**

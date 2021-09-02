@@ -87,7 +87,7 @@ export default {
   },
 
   created: function () {
-    this.getHistoryData(this.$route.params.serverId);
+     this.getHistoryData(this.$route.params.serverId);
   },
   
   methods: {
@@ -106,7 +106,7 @@ export default {
               .split("T")
               .join(" // At: ");
 
-            if (item.status_old === true) item.status = "On";
+            if (item.status_old === true) item.status_old = "On";
             else if (item.status_old === false) {
               item.status_old = "Off";
             }

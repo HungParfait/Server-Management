@@ -132,8 +132,8 @@
             </v-card>
           </v-dialog>
 
-          <button class="primary-button text-subtitle-2" @click="exportCSV()">
-            Export CSV
+          <button class="primary-button text-subtitle-2" @click="exportXLSX()">
+            Export File
           </button>
         </div>
       </div>
@@ -519,7 +519,7 @@ export default {
 
   created: function () {
     //get server info from server
-    this.getData();
+        this.getData();
   },
 
   watch: {
@@ -617,10 +617,10 @@ export default {
         });
     },
 
-    exportCSV() {
+    exportXLSX() {
       const user = JSON.parse(localStorage.getItem("user"));
       allServerServices
-        .exportCSV(user)
+        .exportXLSX(user)
         .then((response) => {
           var hiddenElement = document.createElement("a");
           const url = window.URL.createObjectURL(response.data);

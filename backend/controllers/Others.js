@@ -3,8 +3,8 @@
 var utils = require('../utils/writer.js');
 var Others = require('../service/OthersService');
 
-module.exports.exportCSVGET = function exportCSVGET (req, res, next) {
-  Others.exportCSVGET(res)
+module.exports.exportXLSXGET = function exportXLSXGET (req, res, next) {
+  Others.exportXLSXGET(res)
 };
 
 module.exports.searchGET = function searchGET (req, res, next, q, status, start, end) {

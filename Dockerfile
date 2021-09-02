@@ -5,7 +5,7 @@ RUN cd client ; npm install ; npm run build
 
 FROM node:16 AS server-build
 WORKDIR /root/
-COPY --from=ui-build /usr/src/app/client/dist ./public/
+COPY --from=ui-build /usr/src/app/client/dist ./public/dist
 COPY backend/package*.json ./
 RUN cd backend ; npm install
 COPY backend/ ./
