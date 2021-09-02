@@ -12,8 +12,8 @@ var path = require('path');
  * returns byte[]
  **/
 exports.exportXLSXGET = async function (res) {
-    await createXLSXfile()
-    res.download(path.join(__dirname, '../public/server.xlsx'))
+    () => createXLSXfile()
+    res.sendFile(path.join(__dirname, '../public/server.xlsx'))
 }
 
 /**
@@ -105,8 +105,6 @@ var createXLSXfile = exports.createXLSXfile = async function () {
         fs.writeFile(path.join(__dirname, '../public/server.xlsx'), buffer, function (err) {
             if (err) throw err;
         })
-
-        return
     } catch (err) {
         console.log(err)
     }

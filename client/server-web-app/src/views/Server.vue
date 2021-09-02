@@ -339,7 +339,6 @@
             </template>
             <span>History</span>
           </v-tooltip>
-
         </template>
       </v-data-table>
 
@@ -519,7 +518,7 @@ export default {
 
   created: function () {
     //get server info from server
-        this.getData();
+    this.getData();
   },
 
   watch: {
@@ -557,21 +556,22 @@ export default {
     deleteFunction(array) {
       const user = JSON.parse(localStorage.getItem("user"));
       if (array.length > 0) {
-        array = array.map(item => item._id);
+        array = array.map((item) => item._id);
         allServerServices
           .delete(user, array)
           .then( () => {
+            this.selected = []
             this.snackbarInform("Server Deleted Successfully");
             this.servers = this.servers.filter( item => {
               return !array.includes(item._id);
             });
+            
           })
           .catch((error) => {
             this.snackbarInform(
               (error.response && error.response.data.message) || error.message
             );
           });
-          this.selected = []
       } else {
         this.snackbarInform("No selection");
       }

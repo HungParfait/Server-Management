@@ -2,7 +2,7 @@ version: "3.9"  # optional since v1.27.0
 services:
   server:
     container_name: server
-    image: hungparfait009/server-app
+    image: hungparfait009/server-app-project
     restart: always
     build:
       context: .
