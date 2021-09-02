@@ -11,9 +11,8 @@ var path = require('path');
  *
  * returns byte[]
  **/
-exports.exportXLSXGET = async function (res) {
-    () => createXLSXfile()
-    res.sendFile(path.join(__dirname, '../public/server.xlsx'))
+var exportXLSXGET = function (res) {
+    res.download(path.join(__dirname, '../public/server.xlsx'),'server.xlsx')
 }
 
 /**
@@ -25,7 +24,7 @@ exports.exportXLSXGET = async function (res) {
  * end Date  (optional)
  * returns inline_response_200
  **/
-exports.searchGET = async function (q, status, start, end) {
+var searchGET = async function (q, status, start, end) {
     try {
         let objSearch = {}
 
@@ -66,7 +65,7 @@ exports.searchGET = async function (q, status, start, end) {
     }
 }
 
-var createXLSXfile = exports.createXLSXfile = async function () {
+async function createXLSXfile() {
     try {
         var fs = require('fs')
 
@@ -102,10 +101,14 @@ var createXLSXfile = exports.createXLSXfile = async function () {
             data: dataExcel
         }]);
 
-        fs.writeFile(path.join(__dirname, '../public/server.xlsx'), buffer, function (err) {
-            if (err) throw err;
-        })
+        fs.writeFileSync(path.join(__dirname, '../public/server.xlsx'), buffer)
     } catch (err) {
         console.log(err)
     }
+}
+
+module.exports = {
+    createXLSXfile,
+    searchGET,
+    exportXLSXGET
 }

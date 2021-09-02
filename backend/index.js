@@ -47,7 +47,11 @@ app.use(express.json())
 
 app.use(express.static(path.join(__dirname, '/public/dist')))
 
-app.get('/view-server' || '/login' || '/view-history/:id' || '/register', (req, res) => {
+app.get('/', (req, res) => {
+    res.redirect('/login')
+})
+
+app.get('/view-server', (req, res) => {
     res.sendFile(path.join(__dirname, '/public/dist/index.html'))
 })
 
