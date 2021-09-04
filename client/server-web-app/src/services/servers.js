@@ -3,10 +3,17 @@ import SwaggerClient from 'swagger-client'
 const spec = require('../../spec.json')
 
 class allServerServices {
-    getDataFunction(token) {
+    getDataFunction(token, obj) {
+        if(obj.start) {
+            obj.start = obj.start + "T00:00:00.000Z"
+        }
+        if(obj.end) {
+            obj.end = obj.end + "T23:59:59.000Z"
+        }
         return SwaggerClient.execute({
             spec: spec,
             operationId: 'serverGET',
+            parameters: obj,
             securities: {
                 authorized: {
                     bearerAuth: token
@@ -40,7 +47,7 @@ class allServerServices {
 
     async delete({
         token
-    }, array) {
+    }, id) {
         return SwaggerClient.execute({
             spec: spec,
             operationId: "serverDELETE",
@@ -50,7 +57,7 @@ class allServerServices {
                 }
             },
             parameters: {
-                array_id: array
+                id
             }
         })
     }
@@ -97,7 +104,13 @@ class allServerServices {
 
     async getHistory({
         token
-    }, id) {
+    }, id, start, end) {
+        if(start) {
+            start = start + "T00:00:00.000Z"
+        }
+        if(end) {
+            end = end + "T23:59:59.000Z"
+        }
         return SwaggerClient.execute({
             spec: spec,
             operationId: "serverHistoryIdGET",
@@ -107,37 +120,7 @@ class allServerServices {
                 }
             },
             parameters: {
-                id: id
-            },
-        })
-    }
-
-    async search({
-        token
-    }, {
-        q,
-        status,
-        start,
-        end
-    }) {
-        if(start) {
-            start = start + "T00:00:00.000Z"
-        }
-        if(end) {
-            end = end + "T23:59:59.000Z"
-        }
-        
-        return SwaggerClient.execute({
-            spec: spec,
-            operationId: "searchGET",
-            securities: {
-                authorized: {
-                    bearerAuth: token
-                }
-            },
-            parameters: {
-                q,
-                status,
+                id,
                 start,
                 end
             },

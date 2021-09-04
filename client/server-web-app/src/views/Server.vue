@@ -284,12 +284,11 @@
       </v-row>
 
       <v-data-table
-        v-model="selected"
         :headers="headers"
         :items="servers"
         item-key="_id"
-        show-select
         class="elevation-1 mt-4"
+        :hide-default-footer="true"
       >
         <template v-slot:[`item.actions`]="{ item }">
           <v-tooltip bottom>
@@ -298,7 +297,7 @@
                 small
                 v-bind="attrs"
                 v-on="on"
-                @click="addIdFunc(item)"
+                @click="addIdFunc(item, 'updateInforBox')"
                 class="mx-1"
               >
                 mdi-pencil
@@ -319,25 +318,42 @@
                 mdi-access-point
               </v-icon>
             </template>
-            <span>Get Status</span>
+            <span>Check Status</span>
           </v-tooltip>
 
           <v-tooltip bottom class="mx-2">
             <template v-slot:activator="{ on, attrs }">
-              <i
+              <v-icon
                 small
                 v-bind="attrs"
                 v-on="on"
-                class="fas fa-history text--black mx-1"
+                class="mx-1"
                 @click="
                   $router.push({
                     name: 'History',
                     params: { serverId: item._id },
                   })
                 "
-              ></i>
+              >
+                mdi-antenna
+              </v-icon>
             </template>
             <span>History</span>
+          </v-tooltip>
+
+          <v-tooltip bottom class="mx-1">
+            <template v-slot:activator="{ on, attrs }">
+              <v-icon
+                small
+                v-bind="attrs"
+                v-on="on"
+                class="mx-1"
+                @click="addIdFunc(item, 'dialogDelete')"
+              >
+                mdi-delete
+              </v-icon>
+            </template>
+            <span>Delete</span>
           </v-tooltip>
         </template>
       </v-data-table>
@@ -354,6 +370,17 @@
           </v-card-text>
         </v-card>
       </v-dialog>
+
+      <div class="text-center mt-10">
+        <v-pagination
+          v-model="page"
+          :length="totalPage"
+          :total-visible="7"
+          @input="navigationFunction()"
+          @next="navigationFunction()"
+          @previous="navigationFunction()"
+        ></v-pagination>
+      </div>
     </div>
 
     <v-overlay :z-index="10" :value="updateInforBox">
@@ -405,7 +432,7 @@
           <v-btn
             color="blue darken-1"
             text
-            @click="updateFunction(dataUpdate, updateId)"
+            @click="updateFunction(dataUpdate, updateOrDeleteId)"
           >
             Update
           </v-btn>
@@ -413,25 +440,26 @@
       </v-card>
     </v-overlay>
 
-    <div class="select-noti">
-      <div class="d-flex justify-space-between px-4 align-center">
-        <p class="font-weight-medium text-subtitle-2">
-          {{ selected.length }} selected
-        </p>
-        <div class="">
-          <button
-            class="primary-button text-subtitle-2"
-            @click="deleteFunction(selected)"
+    <v-dialog v-model="dialogDelete" max-width="500px">
+      <v-card>
+        <v-card-title class="text-h5"
+          >Are you sure you want to delete this item?</v-card-title
+        >
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="blue darken-1" text @click="dialogDelete = false"
+            >Cancel</v-btn
           >
-            Delete
-          </button>
-          <span class="font-italic mx-3">Or</span>
-          <button class="primary-button text-subtitle-2" @click="selected = []">
-            Clear Selection
-          </button>
-        </div>
-      </div>
-    </div>
+          <v-btn
+            color="blue darken-1"
+            text
+            @click="deleteFunction(updateOrDeleteId)"
+            >OK</v-btn
+          >
+          <v-spacer></v-spacer>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
     <v-snackbar v-model="snackbar" :timeout="timeout">
       <span style="color: white !important">
@@ -453,14 +481,16 @@ import allServerServices from "../services/servers";
 export default {
   data() {
     return {
+      dialogDelete: false,
+      totalPage: 0,
+      page: 0,
       progress: false,
-      searchcontent: "",
+      searchcontent: null,
       snackbar: false,
       dialog: false,
       dialogServer: false,
       collapse: false,
       statusFilter: null,
-      selected: [],
       updateInforBox: false,
       headers: [
         {
@@ -469,8 +499,8 @@ export default {
           sortable: false,
           value: "IP",
         },
-        { text: "Port", value: "port" },
-        { text: "Status", value: "status" },
+        { text: "Port", value: "port", sortable: false },
+        { text: "Status", value: "status", sortable: false },
         { text: "Description", value: "description", sortable: false },
         { text: "Username", value: "username", sortable: false },
         { text: "Password", value: "password", sortable: false },
@@ -500,7 +530,7 @@ export default {
       servers: [],
       text: "",
       timeout: 2000,
-      updateId: "",
+      updateOrDeleteId: "",
     };
   },
 
@@ -518,16 +548,12 @@ export default {
 
   created: function () {
     //get server info from server
-    this.getData();
+    this.getData(this.$route.query.p || 1);
   },
 
   watch: {
     $route: function () {
-      if (Object.getOwnPropertyNames(this.$route.query).length === 0) {
-        this.getData();
-      } else {
-        this.searchFunction();
-      }
+      this.getData();
     },
   },
 
@@ -541,40 +567,34 @@ export default {
       const user = JSON.parse(localStorage.getItem("user"));
       allServerServices
         .create(user, server)
-        .then(() => {
+        .then((response) => {
+          this.page = response.obj.page;
+          this.totalPage = response.obj.totalPage;
+          this.servers = response.obj.servers;
           this.snackbarInform("Server Created Successfully");
-          this.getData();
+        })
+        .catch((error) => {
+          this.snackbarInform(error.response.data.message || error.message);
+        });
+      this.dialogServer = false;
+    },
+
+    deleteFunction(id) {
+      const user = JSON.parse(localStorage.getItem("user"));
+      allServerServices
+        .delete(user, id)
+        .then((response) => {
+          this.page = response.obj.page
+          this.totalPage = response.obj.totalPage
+          this.dialogDelete = false
+          this.snackbarInform("Server Deleted Successfully");
+          this.navigationFunction()
         })
         .catch((error) => {
           this.snackbarInform(
             (error.response && error.response.data.message) || error.message
           );
         });
-      this.dialogServer = false;
-    },
-
-    deleteFunction(array) {
-      const user = JSON.parse(localStorage.getItem("user"));
-      if (array.length > 0) {
-        array = array.map((item) => item._id);
-        allServerServices
-          .delete(user, array)
-          .then( () => {
-            this.selected = []
-            this.snackbarInform("Server Deleted Successfully");
-            this.servers = this.servers.filter( item => {
-              return !array.includes(item._id);
-            });
-            
-          })
-          .catch((error) => {
-            this.snackbarInform(
-              (error.response && error.response.data.message) || error.message
-            );
-          });
-      } else {
-        this.snackbarInform("No selection");
-      }
     },
 
     statusFunction(item) {
@@ -593,27 +613,6 @@ export default {
         .catch((err) => {
           this.progress = false;
           this.snackbarInform(err);
-        });
-    },
-
-    searchFunction() {
-      const user = JSON.parse(localStorage.getItem("user"));
-      let obj = this.$route.query;
-      allServerServices
-        .search(user, obj)
-        .then((response) => {
-          this.servers = response.obj.server.map((item) => {
-            if (item.status === true) item.status = "On";
-            else item.status = "Off";
-            return item;
-          });
-          this.dialog = false;
-        })
-        .catch((error) => {
-          this.snackbarInform(
-            (error.response && error.response.data.message) || error.message
-          );
-          this.dialog = false;
         });
     },
 
@@ -638,9 +637,15 @@ export default {
 
     updateFunction(data, id) {
       const user = JSON.parse(localStorage.getItem("user"));
+      let {IP, password, port, description} = data 
+      data = Object.assign({}, {IP}, {password}, {port}, {description})
+      console.log(data)
+
       allServerServices
         .update(user, data, id)
         .then(() => {
+          this.snackbarInform("Update Successfully");
+          this.updateInforBox = false;
           this.getData();
         })
         .catch((error) => {
@@ -652,10 +657,13 @@ export default {
 
     getData() {
       const user = JSON.parse(localStorage.getItem("user"));
+      let obj = this.$route.query;
       allServerServices
-        .getDataFunction(user.token)
+        .getDataFunction(user.token, obj)
         .then((response) => {
-          this.servers = JSON.parse(response.data).servers.map((item) => {
+          this.page = response.obj.page;
+          this.totalPage = response.obj.totalPage;
+          this.servers = response.obj.servers.map((item) => {
             if (item.status === true) item.status = "On";
             else item.status = "Off";
             return item;
@@ -673,27 +681,42 @@ export default {
       this.text = message;
     },
 
-    addIdFunc(item) {
-      this.updateInforBox = true;
-      this.updateId = item._id;
+    addIdFunc(item, str) {
+      if (str === "updateInforBox") {
+        this[str] = true;
+        this.dataUpdate = item;
+      } else {
+        this.dialogDelete = true;
+      }
+
+      this.updateOrDeleteId = item._id;
     },
 
     navigationFunction() {
       this.dialog = false;
+      let query = {
+        q: this.searchcontent,
+        start: this.displayFrom,
+        end: this.displayTo,
+        status: this.statusFilter,
+        p: this.page,
+      };
+
+      Object.keys(query).forEach(
+        (key) => query[key] === null && delete query[key]
+      );
+
       this.$router.push({
-        path: "/server",
-        query: {
-          q: this.searchcontent,
-          start: this.displayFrom,
-          end: this.displayTo,
-          status: this.statusFilter,
-        },
+        path: "/view-server",
+        query: query,
+      }).catch(()=>{
+        this.getData()
       });
     },
 
     homeFunction() {
       this.$router.push({
-        path: "/server",
+        path: "/view-server",
       });
       this.displayFrom = null;
       this.displayTo = null;

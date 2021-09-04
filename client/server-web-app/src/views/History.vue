@@ -30,11 +30,138 @@
     </div>
 
     <div class="server-column pa-8">
-      <div>
-        <router-link to="/server">
-          <i class="fas fa-home fa-2x"></i>
-        </router-link>
+      <div class="d-flex justify-space-between">
+        <v-dialog v-model="dialog" persistent max-width="290">
+          <template v-slot:activator="{ on, attrs }">
+            <div class="ma-3 d-flex">
+              <button
+                v-bind="attrs"
+                v-on="on"
+                class="text-capitalize primary-button text-subtitle-2"
+              >
+                <span>Add Filter</span>
+                <i class="fas fa-plus ms-2"></i>
+              </button>
+
+              <div class="mx-3 text-subtitle-2 chip" v-if="displayFrom">
+                <span>From: {{ start_date }}</span>
+                <i
+                  class="fas fa-times ms-2"
+                  @click="deleteFilter('displayFrom')"
+                ></i>
+              </div>
+
+              <div class="mx-3 text-subtitle-2 chip" v-if="displayTo">
+                <span>To: {{ end_date }}</span>
+                <i
+                  class="fas fa-times ms-2"
+                  @click="deleteFilter('displayTo')"
+                ></i>
+              </div>
+            </div>
+          </template>
+          <v-card>
+            <v-card-title class="text-h6 font-weight-bolf">
+              Select Filter
+            </v-card-title>
+            <v-divider></v-divider>
+            <v-card-text>
+              <p class="me-3 font-weight-medium">Date:</p>
+              <div>
+                <v-menu
+                  ref="menu"
+                  v-model="menu"
+                  :close-on-content-click="false"
+                  :return-value.sync="start_date"
+                  transition="scale-transition"
+                  offset-y
+                  min-width="auto"
+                >
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-text-field
+                      v-model="start_date"
+                      label="Picker Start Date"
+                      prepend-icon="mdi-calendar"
+                      readonly
+                      v-bind="attrs"
+                      v-on="on"
+                    ></v-text-field>
+                  </template>
+                  <v-date-picker v-model="start_date" no-title scrollable>
+                    <v-spacer></v-spacer>
+                    <v-btn text color="primary" @click="menu = false">
+                      Cancel
+                    </v-btn>
+                    <v-btn
+                      text
+                      color="primary"
+                      @click="
+                        $refs.menu.save(start_date);
+                        displayFrom = start_date;
+                      "
+                    >
+                      OK
+                    </v-btn>
+                  </v-date-picker>
+                </v-menu>
+
+                <v-menu
+                  ref="menu2"
+                  v-model="menu2"
+                  :close-on-content-click="false"
+                  :return-value.sync="end_date"
+                  transition="scale-transition"
+                  offset-y
+                  min-width="auto"
+                >
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-text-field
+                      v-model="end_date"
+                      label="Picker End Date"
+                      prepend-icon="mdi-calendar"
+                      readonly
+                      v-bind="attrs"
+                      v-on="on"
+                    ></v-text-field>
+                  </template>
+                  <v-date-picker v-model="end_date" no-title scrollable>
+                    <v-spacer></v-spacer>
+                    <v-btn text color="primary" @click="menu2 = false">
+                      Cancel
+                    </v-btn>
+                    <v-btn
+                      text
+                      color="primary"
+                      @click="
+                        $refs.menu2.save(end_date);
+                        displayTo = end_date;
+                      "
+                    >
+                      OK
+                    </v-btn>
+                  </v-date-picker>
+                </v-menu>
+              </div>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="green darken-1" text @click="dialog = false">
+                Cancel
+              </v-btn>
+              <v-btn color="green darken-1" text @click="navigationFunction()">
+                Add
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
+        <div>
+          <router-link to="/view-server">
+            <i class="fas fa-home fa-2x"></i>
+          </router-link>
+        </div>
       </div>
+
       <v-data-table
         :headers="headers"
         :items="history"
@@ -74,34 +201,62 @@ export default {
       snackbar: false,
       timeout: 2000,
       text: "",
-      image: "h",
+      end_date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+        .toISOString()
+        .substr(0, 10),
+      start_date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+        .toISOString()
+        .substr(0, 10),
+      displayFrom: null,
+      displayTo: null,
+      menu: false,
+      menu2: false,
+      dialog: false,
     };
   },
   computed: {
     username: function () {
-      return this.$store.state.auth.user.username;
+      return JSON.parse(localStorage.getItem("user")).username;
     },
     email: function () {
-      return this.$store.state.auth.user.email;
+      return JSON.parse(localStorage.getItem("user")).email;
+    },
+    image: function () {
+      return JSON.parse(localStorage.getItem("user")).username[0];
     },
   },
 
   created: function () {
-     this.getHistoryData(this.$route.params.serverId);
+    this.getHistoryData(
+      this.$route.params.serverId,
+      this.displayFrom,
+      this.displayTo
+    );
   },
-  
+
+  watch: {
+    $route: function () {
+      this.getHistoryData(
+        this.$route.params.serverId,
+        this.displayFrom,
+        this.displayTo
+      );
+    },
+  },
+
   methods: {
     logOut: function () {
       this.$store.dispatch("logout");
       this.$router.push("/login");
     },
 
-    getHistoryData(id) {
+    getHistoryData(id, start, end) {
       const user = JSON.parse(localStorage.getItem("user"));
       allServerServices
-        .getHistory(user, id)
+        .getHistory(user, id, start, end)
         .then((response) => {
-          this.history = JSON.parse(response.data).data.map((item) => {
+          if(response.obj.data) {
+              this.history = response.obj.data.map((item) => {
             item["change_time"] = item["change_time"]
               .split("T")
               .join(" // At: ");
@@ -113,6 +268,10 @@ export default {
 
             return item;
           });
+          } else {
+            this.history = []
+          }
+          
         })
         .catch((error) => {
           this.snackbarInform(
@@ -124,6 +283,29 @@ export default {
     snackbarInform(message) {
       this.snackbar = true;
       this.text = message;
+    },
+
+    navigationFunction() {
+      this.dialog = false;
+      let query = {
+        start: this.displayFrom,
+        end: this.displayTo,
+      };
+
+      Object.keys(query).forEach(
+        (key) => query[key] === null && delete query[key]
+      );
+
+      this.$router.push({
+        path: `/view-history/${this.$route.params.serverId}`,
+        query: query,
+      }).catch(()=>{
+      });
+    },
+
+    deleteFilter(filter) {
+      this[filter] = null;
+      this.navigationFunction();
     },
   },
 };

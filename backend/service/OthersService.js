@@ -24,47 +24,6 @@ var exportXLSXGET = function (res) {
  * end Date  (optional)
  * returns inline_response_200
  **/
-var searchGET = async function (q, status, start, end) {
-    try {
-        let objSearch = {}
-
-        if (start || end) {
-            objSearch.createdAt = {}
-            if (start) {
-                start = new Date(start).toISOString()
-                objSearch.createdAt['$gte'] = start
-            }
-
-            if (end) {
-                end = new Date(end).toISOString()
-                objSearch.createdAt['$lt'] = end
-            }
-        }
-
-        if (q) objSearch.IP = q
-
-        if (status) objSearch.status = status
-
-        const server = await Server.find(objSearch)
-
-        if (!server) {
-            return utils.respondWithCode(404, {
-                message: 'Server is not exist',
-                code: 404
-            });
-        } else {
-            return utils.respondWithCode(200, {
-                server
-            })
-        }
-    } catch (err) {
-        return utils.respondWithCode(500, {
-            message: 'Something went wrong.',
-            code: 500
-        });
-    }
-}
-
 async function createXLSXfile() {
     try {
         var fs = require('fs')
@@ -109,6 +68,5 @@ async function createXLSXfile() {
 
 module.exports = {
     createXLSXfile,
-    searchGET,
     exportXLSXGET
 }

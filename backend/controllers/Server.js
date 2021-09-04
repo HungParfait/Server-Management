@@ -3,8 +3,8 @@
 var utils = require('../utils/writer.js');
 var Server = require('../service/ServerService');
 
-module.exports.serverDELETE = function serverDELETE(req, res, next, array_id) {
-  Server.serverDELETE(array_id)
+module.exports.serverDELETE = function serverDELETE(req, res, next, id) {
+  Server.serverDELETE(id)
     .then(function (response) {
       utils.writeJson(res, response);
     })
@@ -13,8 +13,8 @@ module.exports.serverDELETE = function serverDELETE(req, res, next, array_id) {
     });
 };
 
-module.exports.serverGET = function serverGET(req, res, next, p) {
-  Server.serverGET(p)
+module.exports.serverGET = function serverGET(req, res, next, p, q, status, start, end) {
+  Server.serverGET(p, q, status, start, end)
     .then(function (response) {
       utils.writeJson(res, response);
     })
@@ -23,8 +23,8 @@ module.exports.serverGET = function serverGET(req, res, next, p) {
     });
 }
 
-module.exports.serverHistoryIdGET = function serverHistoryIdGET(req, res, next, id) {
-  Server.serverHistoryIdGET(id)
+module.exports.serverHistoryIdGET = function serverHistoryIdGET(req, res, next, start, end, id) {
+  Server.serverHistoryIdGET(start, end, id)
     .then(function (response) {
       utils.writeJson(res, response);
     })

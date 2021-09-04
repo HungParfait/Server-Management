@@ -10,12 +10,3 @@ module.exports.exportXLSXGET = function exportXLSXGET (req, res, next) {
   })
 };
 
-module.exports.searchGET = function searchGET (req, res, next, q, status, start, end) {
-  Others.searchGET(q, status, start, end)
-    .then(function (response) {
-      utils.writeJson(res, response);
-    })
-    .catch(function (response) {
-      utils.writeJson(res, response);
-    });
-};
