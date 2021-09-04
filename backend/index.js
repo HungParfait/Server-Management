@@ -78,8 +78,8 @@ for (let i = 2; i < openApiApp._router.stack.length; i++) {
 }
 
 db.connect()
-
-cron.schedule('0 0 10 * * *', () => {
+//gui mail
+cron.schedule('0 14 15 * * *', () => {
     mailSender()
 }, {
     scheduled: true,
