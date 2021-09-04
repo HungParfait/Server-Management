@@ -165,13 +165,6 @@ exports.serverIdPUT = async function (body, id) {
         code: 404
       });
     } else {
-      const arr = Object.getOwnPropertyNames(body)
-      let obj = {}
-
-      arr.forEach(item => {
-        obj[`${item}_old`] = server[item]
-      })
-
       if (body.password && body.password !== server.password) {
         try {
           let checkStatus = await ssh.connect({
@@ -187,6 +180,27 @@ exports.serverIdPUT = async function (body, id) {
           })
         }
       }
+
+      const servers2 = await Server.find({
+        IP: body.IP
+      })
+    
+      for (let i = 0; i < servers2.length; i++) {
+        if (servers2[i].port === body.port) {
+          return utils.respondWithCode(409, {
+            code: 409,
+            message: 'Error. Existed server'
+          })
+        }
+      }
+
+      const arr = Object.getOwnPropertyNames(body)
+      
+      let obj = {}
+
+      arr.forEach(item => {
+        obj[`${item}_old`] = server[item]
+      })
 
       Object.assign(server, body)
 
