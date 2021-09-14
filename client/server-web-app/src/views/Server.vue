@@ -280,7 +280,7 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
-        <div class="me-5 font-italic">{{ servers.length }} results</div>
+        
       </v-row>
 
       <v-data-table
@@ -574,7 +574,7 @@ export default {
           this.snackbarInform("Server Created Successfully");
         })
         .catch((error) => {
-          this.snackbarInform(error.response.data.message || error.message);
+          this.snackbarInform(error.message || error.message || 'error');
         });
       this.dialogServer = false;
     },
@@ -639,19 +639,16 @@ export default {
       const user = JSON.parse(localStorage.getItem("user"));
       let {IP, password, port, description} = data 
       data = Object.assign({}, {IP}, {password}, {port}, {description})
-      console.log(data)
 
-      allServerServices
-        .update(user, data, id)
-        .then(() => {
+      allServerServices.update(user, data, id)
+        .then((response) => {
+          console.log(response)
           this.snackbarInform("Update Successfully");
           this.updateInforBox = false;
           this.getData();
         })
         .catch((error) => {
-          this.snackbarInform(
-            (error.response && error.response.data.message) || error.message
-          );
+          this.snackbarInform(error.message || 'Bad Data');
         });
     },
 
@@ -661,7 +658,6 @@ export default {
       allServerServices
         .getDataFunction(user.token, obj)
         .then((response) => {
-          console.log(response)
           this.page = response.obj.page;
           this.totalPage = response.obj.totalPage;
           this.servers = response.obj.servers.map((item) => {

@@ -10,7 +10,6 @@ const {
   setAsync
 } = require('../service/redis')
 
-
 const {
   NodeSSH
 } = require('node-ssh')
@@ -29,7 +28,7 @@ exports.serverDELETE = async function (id) {
     }
   })
 
-  let page = index ? Math.ceil(index / LIMIT): Math.ceil(index + 1 / LIMIT);
+  let page = Math.ceil(index / LIMIT)
 
   try {
 
@@ -38,7 +37,7 @@ exports.serverDELETE = async function (id) {
     })
 
     let count = await Server.countDocuments()
-    
+
     const totalPage = Math.ceil(count / LIMIT)
 
     redisClient.flushall()
@@ -99,7 +98,7 @@ var serverGET = exports.serverGET = async function (p, q, status, start, end) {
 
       var servers = await Server.find(objSearch).limit(LIMIT).skip((page - 1) * LIMIT)
 
-      const cache = await setAsync('server@' + JSON.stringify(objSearch) + `@${page}`, 1000 * 5 * 50, JSON.stringify({
+      const cache = await setAsync('server@' + JSON.stringify(objSearch) + `@${page}`, 1000 * 5 * 60, JSON.stringify({
         servers,
         page,
         totalPage
@@ -111,8 +110,6 @@ var serverGET = exports.serverGET = async function (p, q, status, start, end) {
         totalPage
       })
     }
-
-
   } catch (error) {
     return utils.respondWithCode(500, error.message)
   }
@@ -150,7 +147,9 @@ exports.serverHistoryIdGET = async function (start, end, id) {
     const value = await getAsync(JSON.stringify(id) + '@' + JSON.stringify(objSearch))
 
     if (value) {
-      return utils.respondWithCode(200, { data: value})
+      return utils.respondWithCode(200, {
+        data: value
+      })
     } else {
       const server = await History.findOne({
         serverId: id
@@ -164,8 +163,9 @@ exports.serverHistoryIdGET = async function (start, end, id) {
 
       } else {
         if (date) {
-          const data = await Server.findById(id).elemMatch(
-            "history", objSearch)
+          const data = await History.findOne({
+            serverId: id
+          }).elemMatch("history", objSearch)
 
           const cache = await setAsync(JSON.stringify(id) + '@' + JSON.stringify(objSearch), 1000 * 5 * 50, JSON.stringify(data?.history))
 
@@ -174,7 +174,6 @@ exports.serverHistoryIdGET = async function (start, end, id) {
           })
         } else {
           const cache = await setAsync(JSON.stringify(id) + '@' + JSON.stringify(objSearch), 1000 * 5 * 50, JSON.stringify(server.history))
-
           return utils.respondWithCode(200, {
             data: server.history
           })
@@ -183,7 +182,6 @@ exports.serverHistoryIdGET = async function (start, end, id) {
     }
 
   } catch (error) {
-    console.log(error)
     return utils.respondWithCode(500, error)
   }
 }
@@ -246,13 +244,13 @@ exports.serverIdPUT = async function (body, id) {
       const serverHistory = await History.findOne({
         serverId: id
       })
-
       serverHistory.history.push(obj)
 
       await serverHistory.save()
+
       await server.save()
 
-      await redisClient.flushall()
+      redisClient.flushall()
 
       return utils.respondWithCode(200, {
         message: 'Update successfully',
@@ -260,7 +258,6 @@ exports.serverIdPUT = async function (body, id) {
       })
     }
   } catch (error) {
-    console.log(error)
     return utils.respondWithCode(500, error);
   }
 }
@@ -288,7 +285,7 @@ exports.serverPOST = async function (body) {
     }
   }
 
-  let status
+  let status = false
 
   try {
     let checkStatus = await ssh.connect({
@@ -299,6 +296,7 @@ exports.serverPOST = async function (body) {
     })
 
     status = true
+
   } catch (error) {
     status = false
   }
@@ -315,8 +313,8 @@ exports.serverPOST = async function (body) {
   try {
     let createdServer = await newServer.save()
 
-    const newHistory = new Server({
-      serverId: createdServer,
+    const newHistory = new History({
+      serverId: createdServer._id,
       history: [{
         port_old: body.port,
         password_old: body.password,
@@ -324,14 +322,16 @@ exports.serverPOST = async function (body) {
         username_old: body.username,
       }],
     })
+
     await newHistory.save()
 
     let index = await Server.countDocuments()
+
     let page = Math.ceil(index / LIMIT)
 
-    await redisClient.flushall()
+    redisClient.flushall()
 
-    return serverGET(page)
+    return await serverGET(page)
 
   } catch (error) {
     return utils.respondWithCode(500, error)
@@ -381,7 +381,7 @@ exports.serverStatusIdGET = async function (id) {
           serverHistory.history.push({
             status_old: newStatus,
           })
-          await redisClient.flushall()
+          redisClient.flushall()
           await server.save()
           await serverHistory.save()
         }
@@ -401,7 +401,7 @@ exports.serverStatusIdGET = async function (id) {
           serverHistory.history.push({
             status_old: newStatus,
           })
-          await redisClient.flushall()
+          redisClient.flushall()
           await server.save()
           await serverHistory.save()
         }
@@ -447,7 +447,7 @@ exports.checkStatusContinuous = async function () {
           serverHistory.history.push({
             status_old: newStatus,
           })
-          await redisClient.flushall()
+          redisClient.flushall()
           await item.save()
           await serverHistory.save()
         }
@@ -463,7 +463,7 @@ exports.checkStatusContinuous = async function () {
           serverHistory.history.push({
             status_old: newStatus,
           })
-          await redisClient.flushall()
+          redisClient.flushall()
           await item.save()
           await serverHistory.save()
         }
