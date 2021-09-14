@@ -26,27 +26,6 @@ const Server = new Schema({
         type: Boolean,
         required: true
     },
-    history: [
-        {
-        username_old: {
-            type: String,
-        },
-        password_old: {
-            type: String,
-        },
-        port_old: {
-            type: String,
-        },
-        change_time: {
-            type: Date,
-            default: Date.now
-        },
-        status_old: {
-            type: Boolean,
-        }
-    },
-
-]
 }, {
     timestamps: true
 });

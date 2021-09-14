@@ -3,6 +3,13 @@
 const utils = require('../utils/writer');
 
 const Server = require('../models/db/Servers');
+const History = require('../models/db/History');
+const {
+  redisClient,
+  getAsync,
+  setAsync
+} = require('../service/redis')
+
 
 const {
   NodeSSH
@@ -22,7 +29,7 @@ exports.serverDELETE = async function (id) {
     }
   })
 
-  let page = Math.ceil(index / LIMIT)
+  let page = index ? Math.ceil(index / LIMIT): Math.ceil(index + 1 / LIMIT);
 
   try {
 
@@ -31,7 +38,10 @@ exports.serverDELETE = async function (id) {
     })
 
     let count = await Server.countDocuments()
+    
     const totalPage = Math.ceil(count / LIMIT)
+
+    redisClient.flushall()
 
     return utils.respondWithCode(200, {
       page,
@@ -72,25 +82,39 @@ var serverGET = exports.serverGET = async function (p, q, status, start, end) {
         end = new Date(end).toISOString()
         objSearch.createdAt['$lt'] = end
       }
-
     }
 
     if (q) objSearch.IP = q
 
     if (status) objSearch.status = status
 
-    const count = await Server.countDocuments(objSearch);
-    const totalPage = Math.ceil(count / LIMIT)
+    const result = await getAsync('server@' + JSON.stringify(objSearch) + `@${page}`)
 
-    var servers = await Server.find(objSearch).limit(LIMIT).skip((page - 1) * LIMIT)
+    if (result) {
+      return utils.respondWithCode(200, JSON.parse(result))
+    } else {
+      const count = await Server.countDocuments(objSearch);
 
-    return utils.respondWithCode(200, {
-      servers,
-      page,
-      totalPage
-    })
+      const totalPage = Math.ceil(count / LIMIT)
+
+      var servers = await Server.find(objSearch).limit(LIMIT).skip((page - 1) * LIMIT)
+
+      const cache = await setAsync('server@' + JSON.stringify(objSearch) + `@${page}`, 1000 * 5 * 50, JSON.stringify({
+        servers,
+        page,
+        totalPage
+      }))
+
+      return utils.respondWithCode(200, {
+        servers,
+        page,
+        totalPage
+      })
+    }
+
+
   } catch (error) {
-    return utils.respondWithCode(500, error)
+    return utils.respondWithCode(500, error.message)
   }
 }
 
@@ -103,7 +127,9 @@ var serverGET = exports.serverGET = async function (p, q, status, start, end) {
 exports.serverHistoryIdGET = async function (start, end, id) {
   try {
     let objSearch = {}
+
     let date = false
+
     if (start || end) {
       date = true
 
@@ -120,34 +146,47 @@ exports.serverHistoryIdGET = async function (start, end, id) {
       }
 
     }
-    
-    const server = await Server.findById(id)
 
-    if (!server) {
-      return utils.respondWithCode(404, {
-        message: 'Server is not exist',
-        code: 404
-      });
+    const value = await getAsync(JSON.stringify(id) + '@' + JSON.stringify(objSearch))
+
+    if (value) {
+      return utils.respondWithCode(200, { data: value})
     } else {
-      if(date) {
-        const data = await Server.findById(id).elemMatch(
-          "history", objSearch )
-        return utils.respondWithCode(200, {
-          data: data?.history
-        })
-      }
-      else {
-        return utils.respondWithCode(200, {
+      const server = await History.findOne({
+        serverId: id
+      })
+
+      if (!server) {
+        return utils.respondWithCode(404, {
+          message: 'Server is not exist',
+          code: 404
+        });
+
+      } else {
+        if (date) {
+          const data = await Server.findById(id).elemMatch(
+            "history", objSearch)
+
+          const cache = await setAsync(JSON.stringify(id) + '@' + JSON.stringify(objSearch), 1000 * 5 * 50, JSON.stringify(data?.history))
+
+          return utils.respondWithCode(200, {
+            data: data?.history
+          })
+        } else {
+          const cache = await setAsync(JSON.stringify(id) + '@' + JSON.stringify(objSearch), 1000 * 5 * 50, JSON.stringify(server.history))
+
+          return utils.respondWithCode(200, {
             data: server.history
-        })
+          })
+        }
       }
     }
+
   } catch (error) {
     console.log(error)
     return utils.respondWithCode(500, error)
   }
 }
-
 
 /**
  * update server
@@ -184,7 +223,7 @@ exports.serverIdPUT = async function (body, id) {
       const servers2 = await Server.find({
         IP: body.IP
       })
-    
+
       for (let i = 0; i < servers2.length; i++) {
         if (servers2[i].port === body.port) {
           return utils.respondWithCode(409, {
@@ -195,7 +234,7 @@ exports.serverIdPUT = async function (body, id) {
       }
 
       const arr = Object.getOwnPropertyNames(body)
-      
+
       let obj = {}
 
       arr.forEach(item => {
@@ -204,9 +243,16 @@ exports.serverIdPUT = async function (body, id) {
 
       Object.assign(server, body)
 
-      server.history.push(obj)
+      const serverHistory = await History.findOne({
+        serverId: id
+      })
 
+      serverHistory.history.push(obj)
+
+      await serverHistory.save()
       await server.save()
+
+      await redisClient.flushall()
 
       return utils.respondWithCode(200, {
         message: 'Update successfully',
@@ -231,13 +277,30 @@ exports.serverPOST = async function (body) {
     IP: body.ip
   })
 
-  for (let i = 0; i < servers.length; i++) {
-    if (servers[i].port === body.port) {
-      return utils.respondWithCode(409, {
-        code: 409,
-        message: 'Error. Existed server'
-      })
+  if (servers.length > 0) {
+    for (let i = 0; i < servers.length; i++) {
+      if (servers[i].port === body.port) {
+        return utils.respondWithCode(409, {
+          code: 409,
+          message: 'Error. Existed server'
+        })
+      }
     }
+  }
+
+  let status
+
+  try {
+    let checkStatus = await ssh.connect({
+      host: body.ip,
+      username: body.username,
+      port: body.port,
+      password: body.password,
+    })
+
+    status = true
+  } catch (error) {
+    status = false
   }
 
   const newServer = new Server({
@@ -246,38 +309,34 @@ exports.serverPOST = async function (body) {
     description: body.description,
     username: body.username,
     password: body.password,
-    status: false,
-    history: [{
-      port_old: body.port,
-      password_old: body.password,
-      status_old: false,
-      username_old: body.username,
-    }],
+    status: status,
   })
 
   try {
-    let checkStatus = await ssh.connect({
-      host: newServer.IP,
-      username: newServer.username,
-      port: newServer.port,
-      password: newServer.password,
+    let createdServer = await newServer.save()
+
+    const newHistory = new Server({
+      serverId: createdServer,
+      history: [{
+        port_old: body.port,
+        password_old: body.password,
+        status_old: status,
+        username_old: body.username,
+      }],
     })
+    await newHistory.save()
 
-    newServer.status = true
-    newServer.history[0].status_old = true
-  } catch (error) {}
-
-  try {
-    await newServer.save()
     let index = await Server.countDocuments()
     let page = Math.ceil(index / LIMIT)
+
+    await redisClient.flushall()
+
     return serverGET(page)
 
   } catch (error) {
     return utils.respondWithCode(500, error)
   }
 };
-
 
 
 /**
@@ -289,6 +348,7 @@ exports.serverPOST = async function (body) {
 exports.serverStatusIdGET = async function (id) {
   try {
     const server = await Server.findById(id)
+
     if (!server) {
       return utils.respondWithCode(404, {
         message: 'Server is not exist',
@@ -314,11 +374,16 @@ exports.serverStatusIdGET = async function (id) {
 
         const newStatus = true
         if (newStatus !== status) {
+          const serverHistory = await History.findOne({
+            serverId: id
+          })
           server.status = newStatus;
-          server.history.push({
+          serverHistory.history.push({
             status_old: newStatus,
           })
+          await redisClient.flushall()
           await server.save()
+          await serverHistory.save()
         }
 
 
@@ -329,11 +394,16 @@ exports.serverStatusIdGET = async function (id) {
       } catch (error) {
         const newStatus = false
         if (newStatus !== status) {
+          const serverHistory = await History.findOne({
+            serverId: id
+          })
           server.status = newStatus;
-          server.history.push({
+          serverHistory.history.push({
             status_old: newStatus,
           })
+          await redisClient.flushall()
           await server.save()
+          await serverHistory.save()
         }
         error.status = 'Off'
         return utils.respondWithCode(200, error)
@@ -344,6 +414,9 @@ exports.serverStatusIdGET = async function (id) {
     return utils.respondWithCode(500, error)
   }
 }
+
+
+
 
 exports.checkStatusContinuous = async function () {
   const server = await Server.find({})
@@ -368,10 +441,15 @@ exports.checkStatusContinuous = async function () {
         const newStatus = true
         if (newStatus !== status) {
           item.status = newStatus;
-          item.history.push({
+          const serverHistory = await History.findOne({
+            serverId: id
+          })
+          serverHistory.history.push({
             status_old: newStatus,
           })
+          await redisClient.flushall()
           await item.save()
+          await serverHistory.save()
         }
 
         return
@@ -379,11 +457,15 @@ exports.checkStatusContinuous = async function () {
       } catch (error) {
         const newStatus = false
         if (newStatus !== status) {
-          item.status = newStatus;
-          item.history.push({
+          const serverHistory = await History.findOne({
+            serverId: id
+          })
+          serverHistory.history.push({
             status_old: newStatus,
           })
-          await server.save()
+          await redisClient.flushall()
+          await item.save()
+          await serverHistory.save()
         }
 
         return

@@ -661,6 +661,7 @@ export default {
       allServerServices
         .getDataFunction(user.token, obj)
         .then((response) => {
+          console.log(response)
           this.page = response.obj.page;
           this.totalPage = response.obj.totalPage;
           this.servers = response.obj.servers.map((item) => {

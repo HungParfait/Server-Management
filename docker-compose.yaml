@@ -2,7 +2,7 @@ version: "3.9"  # optional since v1.27.0
 services:
   server:
     container_name: server
-    image: hungparfait009/server-app-final
+    image: hungparfait009/server-management-project-final
     restart: always
     build:
       context: .
@@ -13,10 +13,17 @@ services:
       - mongo
     depends_on:
       - mongo 
+      - redis
     environment: 
       PORT: 3000
       DB_CONNECTION_STRING: mongodb://mongo/ServerManagement
-      NODE_ENV: development
+      NODE_ENV: production
+  redis: 
+    container_name: redis
+    image: redis
+    ports: 
+      - 6379:6379
+    restart: always
   mongo:
     container_name: mongo
     image: mongo

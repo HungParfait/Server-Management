@@ -1,3 +1,4 @@
+require('dotenv').config()
 const nodemailer = require('nodemailer')
 
 const path = require('path')
@@ -13,14 +14,14 @@ exports.mailSender = async function () {
     port: 465,
     secure: true, // true for 465, false for other ports
     auth: {
-      user: 'hungnd@bluecyber.vn', // generated ethereal user
-      pass: 'HungSuccess', // generated ethereal password
+      user: process.env.EMAIL, // generated ethereal user
+      pass: process.env.PASSWORD, // generated ethereal password
     },
   });
 
   var message = {
-    from: "hungnd@bluecyber.vn",
-    to: "hung.nd181507@sis.hust.edu.vn",
+    from: process.env.FROM,
+    to: process.env.TO,
     subject: "Server Management Daily Report",
     html: '<p>Server Management</p>',
     attachments: [{ 
