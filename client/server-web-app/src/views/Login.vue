@@ -32,7 +32,7 @@
               depressed
               elevation="4"
               outlined
-              class="mb-3 mt-5"
+              class="mb-1 mt-5"
               type="submit"
             >
               <span v-show="!loading">Đăng nhập</span>

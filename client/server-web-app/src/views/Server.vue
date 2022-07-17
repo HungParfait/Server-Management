@@ -642,7 +642,6 @@ export default {
 
       allServerServices.update(user, data, id)
         .then((response) => {
-          console.log(response)
           this.snackbarInform("Update Successfully");
           this.updateInforBox = false;
           this.getData();
