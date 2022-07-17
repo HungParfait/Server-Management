@@ -162,7 +162,6 @@ paths:
       security:
       - bearerAuth: []
       x-swagger-router-controller: Server
-    
   /api/server/{id}:
     put:
       tags:

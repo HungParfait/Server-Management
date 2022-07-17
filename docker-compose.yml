@@ -1,8 +1,13 @@
 version: "3.9"  # optional since v1.27.0
+
+# networks:
+#   app-tier:
+#     driver: bridge
+
 services:
   server:
     container_name: server
-    image: hungparfait009/server-management-project-final
+    image: hungparfait009/server-management-project-server
     restart: always
     build:
       context: .
@@ -18,12 +23,27 @@ services:
       PORT: 3000
       DB_CONNECTION_STRING: mongodb://mongo/ServerManagement
       NODE_ENV: production
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    # networks:
+    #   - app-tier
+  client:
+    container_name: client
+    image: hungparfait009/server-management-project-nginx-client
+    restart: always
+    build:
+      context: ./client
+      dockerfile: ./Dockerfile
+    ports:
+      - 8080:80
   redis: 
     container_name: redis
-    image: redis
+    image: redis:latest
     ports: 
       - 6379:6379
     restart: always
+    # networks:
+    #   - app-tier
   mongo:
     container_name: mongo
     image: mongo

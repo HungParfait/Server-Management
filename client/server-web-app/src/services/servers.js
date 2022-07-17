@@ -68,8 +68,7 @@ class allServerServices {
 
         return SwaggerClient.execute({
             spec: spec,
-            pathName: '/server',
-            method: 'post',
+            operationId: 'serverPOST',
             securities: {
                 authorized: {
                     bearerAuth: token

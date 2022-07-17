@@ -21,7 +21,7 @@
     }
   ],
   "paths": {
-    "/user/login": {
+    "/api/user/login": {
       "post": {
         "tags": [
           "user"
@@ -73,7 +73,7 @@
         "x-swagger-router-controller": "User"
       }
     },
-    "/user/register": {
+    "/api/user/register": {
       "post": {
         "tags": [
           "user"
@@ -115,7 +115,7 @@
         "x-swagger-router-controller": "User"
       }
     },
-    "/server": {
+    "/api/server": {
       "get": {
         "tags": [
           "server"
@@ -252,7 +252,7 @@
         "x-swagger-router-controller": "Server"
       }
     },
-    "/server/{id}": {
+    "/api/server/{id}": {
       "put": {
         "tags": [
           "server"
@@ -379,7 +379,7 @@
         "x-swagger-router-controller": "Server"
       }
     },
-    "/server/history/{id}": {
+    "/api/server/history/{id}": {
       "get": {
         "tags": [
           "server"
@@ -451,7 +451,7 @@
         "x-swagger-router-controller": "Server"
       }
     },
-    "/server/status/{id}": {
+    "/api/server/status/{id}": {
       "get": {
         "tags": [
           "server"
@@ -501,7 +501,7 @@
         "x-swagger-router-controller": "Server"
       }
     },
-    "/exportXLSX": {
+    "/api/exportXLSX": {
       "get": {
         "tags": [
           "others"
